@@ -66,7 +66,7 @@ upload_proxy() {
 }
 gen_data() {
     seq $FIRST_PORT $LAST_PORT | while read port; do
-        echo "thuantran/thuantran/$IP4/$port/$(gen64 $IP6)"
+        echo "cloud/v6ForYou69/$IP4/$port/$(gen64 $IP6)"
     done
 }
 
