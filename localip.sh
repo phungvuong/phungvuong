@@ -28,7 +28,7 @@ install_3proxy() {
 gen_3proxy() {
     cat <<EOF
 daemon
-maxconn 1000
+maxconn 2000
 nscache 65536
 nscache6 65536
 timeouts 1 5 30 60 180 1800 15 60
