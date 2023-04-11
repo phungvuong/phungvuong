@@ -26,10 +26,7 @@ install_3proxy() {
     #chkconfig 3proxy on
     cd $WORKDIR
 }
-download_proxy() {
-cd /home/vpsus
-curl -F "file=@proxy.txt" https://file.io
-}
+
 gen_3proxy() {
     cat <<EOF
 daemon
@@ -44,12 +41,9 @@ setgid 65535
 setuid 65535
 stacksize 6291456 
 flush
-auth strong
 
-users $(awk -F "/" 'BEGIN{ORS="";} {print $1 ":CL:" $2 " "}' ${WORKDATA})
-
-$(awk -F "/" '{print "auth strong\n" \
-"allow " $1 "\n" \
+$(awk -F "/" '{print "\n" \
+"" $1 "\n" \
 "proxy -6 -n -a -p" $4 " -i" $3 " -e"$5"\n" \
 "flush\n"}' ${WORKDATA})
 EOF
@@ -64,7 +58,7 @@ EOF
 
 gen_data() {
     seq $FIRST_PORT $LAST_PORT | while read port; do
-        echo "user$port/$(random)/$IP4/$port/$(gen64 $IP6)"
+        echo "//$IP4/$port/$(gen64 $IP6)"
     done
 }
 
@@ -76,7 +70,7 @@ EOF
 
 gen_ifconfig() {
     cat <<EOF
-$(awk -F "/" '{print "ifconfig eth0 inet6 add " $5 "/48"}' ${WORKDATA})
+$(awk -F "/" '{print "ifconfig eth0 inet6 add " $5 "/64"}' ${WORKDATA})
 EOF
 }
 echo "installing apps"
@@ -94,7 +88,7 @@ IP6=$(curl -6 -s icanhazip.com | cut -f1-4 -d':')
 
 echo "Internal ip = ${IP4}. Exteranl sub for ip6 = ${IP6}"
 
-FIRST_PORT=10000
+FIRST_PORT=10001
 LAST_PORT=12000
 
 gen_data >$WORKDIR/data.txt
@@ -107,13 +101,14 @@ gen_3proxy >/usr/local/etc/3proxy/3proxy.cfg
 cat >>/etc/rc.local <<EOF
 bash ${WORKDIR}/boot_iptables.sh
 bash ${WORKDIR}/boot_ifconfig.sh
-ulimit -n 1000048
+ulimit -n 10048
 /usr/local/etc/3proxy/bin/3proxy /usr/local/etc/3proxy/3proxy.cfg
 EOF
-chmod 0755 /etc/rc.local
+
 bash /etc/rc.local
 
 gen_proxy_file_for_user
+rm -rf /root/3proxy-3proxy-0.8.6
 
 echo "Starting Proxy"
-download_proxy
+
